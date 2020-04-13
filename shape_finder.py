@@ -3,10 +3,9 @@ import cv2
 import numpy as np
 
 
-BORDER_WIDTH = 10
-EPS_APPROXIMATION = 5e-2
-EPS_ZERO = 1e-3
-MIN_MAX_DIST_THRESHOLD = 5
+BORDER_WIDTH = 50
+EPS_APPROXIMATION = 2e-2
+EPS_ZERO = 1e-6
 
 
 def read_shapes(shapes_file_name):
@@ -15,8 +14,10 @@ def read_shapes(shapes_file_name):
         n = int(shapes_file.readline())
         for i in range(n):
             shape_coords = list(map(int, shapes_file.readline().split(', ')))
-            shape_vertexes = [[shape_coords[j], shape_coords[j + 1]] for j in range(0, len(shape_coords), 2)]
-            shapes.append(np.array(shape_vertexes[::-1]))
+            shape_vertexes = np.array(shape_coords).reshape((-1, 2))
+            if cv2.contourArea(shape_vertexes, True) < 0:
+                shape_vertexes = shape_vertexes[::-1]
+            shapes.append(shape_vertexes)
         return shapes
 
 
@@ -89,10 +90,10 @@ def find_primitives(shapes, polygons):
                         min_max_dist = max_dist
                         min_j, min_bias_x, min_bias_y, min_scale, min_angle = j, bias_x, bias_y, scale, angle
             polygon = np.roll(polygon, 1, 0)
-        if min_max_dist < MIN_MAX_DIST_THRESHOLD:
+        if min_max_dist < np.inf:
             primitives.append([min_j, min_bias_x - BORDER_WIDTH, min_bias_y - BORDER_WIDTH,
                                min_scale, min_angle * 180 / np.pi])
-    return primitives
+    return np.round(primitives).astype(int)
 
 
 if __name__ == '__main__':
@@ -111,6 +112,6 @@ if __name__ == '__main__':
 
     primitives = find_primitives(shapes, polygons)
 
-    print(len(primitives))
+    print(primitives.shape[0])
     for primitive in primitives:
         print(*primitive, sep=', ')
