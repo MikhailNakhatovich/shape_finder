@@ -4,7 +4,7 @@ import numpy as np
 
 
 BORDER_WIDTH = 50
-EPS_APPROXIMATION = 15e-3
+EPS_APPROXIMATION = 2e-2
 EPS_ZERO = 1e-6
 
 
